@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Parser</title>
+</head>
+
+<body>
+    <textarea type="text" id="amazonUrl" placeholder="Enter URLs separated by space"
+        style="width: 300px; height: 100px;"></textarea>
+    <button onclick="parseAmazonUrls()">Parse</button>
+    <div id="result"></div> <!-- Modified to accommodate multiple results -->
+
+    <script>
+        function parseAmazonUrls() {
+            const urlInput = document.getElementById("amazonUrl").value;
+            const urls = urlInput.split(/\s+/); // Split input by space
+            document.getElementById("result").innerHTML = ''; // Clear previous results
+            const products = [];
+            urls.forEach(url => { // Process each URL
+                if (url.includes("amazon.com/")) {
+                    fetch(url)
+                        .then(response => response.text())
+                        .then(html => {
+
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, "text/html");
+
+                            // Extract title
+                            const titleElement = doc.querySelector('span#productTitle');
+                            const title = titleElement ? titleElement.innerText.trim() : "Title not found";
+
+                            const landingImageElement = doc.querySelector('div#imgTagWrapperId img');
+                            const landingImage = landingImageElement ? landingImageElement.src : "Image not found";
+
+                            //const priceElement = doc.querySelector('span.a-price.a-text-price.a-size-medium.apexPriceToPay span.a-offscreen');
+                            const priceElement = doc.querySelector('.a-offscreen');
+                            const price = priceElement ? priceElement.innerText.trim() : "Price not found";
+
+                            products.push({ title, landingImage, price });
+                            // Create elements dynamically for each product
+                            const productDiv = document.createElement("div");
+                            productDiv.innerHTML = `<p>Title: ${title}</p>
+                                                     <p>Main Image: <img src="${landingImage}" alt="Landing Image" style="width: 100px;"></p>
+                                                     <p>Price: ${price}</p>`;
+                            document.getElementById("result").appendChild(productDiv);
+                        })
+                        .catch(error => console.error("Error fetching Amazon page:", error));
+                }
+                else if (url.includes("macys.com/")) {
+                    fetch(url)
+                        .then(response => response.text())
+                        .then(html => {
+
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, "text/html");
+
+                            // Extract brand name
+                            const brandNameElement = doc.querySelector('.brand-name a');
+                            const brandName = brandNameElement ? brandNameElement.innerText.trim() : "Brand name not found";
+
+                            // Extract product name
+                            const productNameElement = doc.querySelector('[data-auto="product-name"]');
+                            const productName = productNameElement ? productNameElement.innerText.trim() : "Product name not found";
+
+                            // Extract main picture source
+                            const mainPictureElement = doc.querySelector('.main-picture img');
+                             landingImage = mainPictureElement ? mainPictureElement.getAttribute('src') : "Main picture not found";
+
+                            const priceElement = doc.querySelector('div.lowest-sale-price span.bold');
+                            price = priceElement ? priceElement.innerText.trim() : "Price not found";
+
+                            title = brandName + ' ' + productName;
+
+
+                            products.push({ title, landingImage, price });
+
+                            // Create elements dynamically for each product
+                            const productDiv = document.createElement("div");
+                            productDiv.innerHTML = `
+                                     <p>Product Name: ${title}</p>
+                                     <p>Main Picture: <img src="${landingImage}" alt="Main Picture" style="width: 100px;"></p>
+                                     <p>Price: ${price}</p>`;
+                            document.getElementById("result").appendChild(productDiv);
+                        })
+                        .catch(error => console.error("Error fetching product page:", error));
+                }
+                else if (url.includes("iherb.com/")) {
+                    fetch(url)
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, "text/html");
+
+                            // Extract brand name
+                            const brandNameElement = doc.querySelector('.product-summary-title');
+                            const title = brandNameElement ? brandNameElement.innerText.trim() : "Brand name not found";
+
+
+                            // Extract main picture source
+                            const mainPictureElement = doc.querySelector('img#iherb-product-image');
+                            const landingImage = mainPictureElement ? mainPictureElement.getAttribute('src') : "Main picture not found";
+
+                            const priceElement = doc.querySelector('.s24');
+                            price = priceElement ? priceElement.innerText.trim() : "Price not found";
+
+
+                            products.push({ title, landingImage, price });
+
+                            // Create elements dynamically for each product
+                            const productDiv = document.createElement("div");
+                            productDiv.innerHTML = `
+                                     <p>Product Name: ${title}</p>
+                                     <p>Main Picture: <img src="${landingImage}" alt="Main Picture" style="width: 100px;"></p>
+                                     <p>Price: ${price}</p>`;
+                            document.getElementById("result").appendChild(productDiv);
+                        })
+                        .catch(error => console.error("Error fetching product page:", error));
+                }
+                else {
+                    alert("One or more URLs are invalid. Please check and try again.");
+                    return; // Exit if any URL is invalid
+                }
+            });
+            console.log(products)
+        }
+
+
+    </script>
+</body>
+
+</html>
